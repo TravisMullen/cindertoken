@@ -1,0 +1,29 @@
+{
+  "name": "cindertoken",
+  "version": "1.0.0",
+  "description": "Cinder Token - ERC20",
+  "main": "truffle.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "truffle test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cinderblockchain/cindertoken.git"
+  },
+  "keywords": [
+    "ERC20",
+    "Token",
+    "BlockChain",
+    "CinderToken",
+    "CIN"
+  ],
+  "author": "Travis Mullen",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cinderblockchain/cindertoken/issues"
+  },
+  "homepage": "https://github.com/cinderblockchain/cindertoken#readme"
+}
