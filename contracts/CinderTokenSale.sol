@@ -1,35 +1,35 @@
 pragma solidity ^0.4.15;
 
+
 /**
  * @title SafeMath
  * @dev Math operations with safety checks that throw on error
  */
 library SafeMath {
-    function mul(uint256 a, uint256 b) internal constant returns(uint256) {
-        uint256 c = a * b;
-        assert(a == 0 || c / a == b);
-        return c;
-    }
+  function mul(uint256 a, uint256 b) internal constant returns (uint256) {
+    uint256 c = a * b;
+    assert(a == 0 || c / a == b);
+    return c;
+  }
 
-    function div(uint256 a, uint256 b) internal constant returns(uint256) {
-        // assert(b > 0); // Solidity automatically throws when dividing by 0
-        uint256 c = a / b;
-        // assert(a == b * c + a % b); // There is no case in which this doesn't hold
-        return c;
-    }
+  function div(uint256 a, uint256 b) internal constant returns (uint256) {
+    // assert(b > 0); // Solidity automatically throws when dividing by 0
+    uint256 c = a / b;
+    // assert(a == b * c + a % b); // There is no case in which this doesn't hold
+    return c;
+  }
 
-    function sub(uint256 a, uint256 b) internal constant returns(uint256) {
-        assert(b <= a);
-        return a - b;
-    }
+  function sub(uint256 a, uint256 b) internal constant returns (uint256) {
+    assert(b <= a);
+    return a - b;
+  }
 
-    function add(uint256 a, uint256 b) internal constant returns(uint256) {
-        uint256 c = a + b;
-        assert(c >= a);
-        return c;
-    }
+  function add(uint256 a, uint256 b) internal constant returns (uint256) {
+    uint256 c = a + b;
+    assert(c >= a);
+    return c;
+  }
 }
-
 
 /**
  * @title Ownable
@@ -71,6 +71,50 @@ contract Ownable {
         owner = newOwner;
     }
 
+}
+
+/**
+ * @title Pausable
+ * @dev Base contract which allows children to implement an emergency stop mechanism.
+ */
+contract Pausable is Ownable {
+  event Pause();
+  event Unpause();
+
+  bool public paused = false;
+
+
+  /**
+   * @dev Modifier to make a function callable only when the contract is not paused.
+   */
+  modifier whenNotPaused() {
+    require(!paused);
+    _;
+  }
+
+  /**
+   * @dev Modifier to make a function callable only when the contract is paused.
+   */
+  modifier whenPaused() {
+    require(paused);
+    _;
+  }
+
+  /**
+   * @dev called by the owner to pause, triggers stopped state
+   */
+  function pause() onlyOwner whenNotPaused public {
+    paused = true;
+    Pause();
+  }
+
+  /**
+   * @dev called by the owner to unpause, returns to normal state
+   */
+  function unpause() onlyOwner whenPaused public {
+    paused = false;
+    Unpause();
+  }
 }
 
 /**
@@ -220,6 +264,35 @@ contract StandardToken is ERC20, BasicToken {
 }
 
 /**
+ * @title Pausable token
+ *
+ * @dev StandardToken modified with pausable transfers.
+ **/
+
+contract PausableToken is StandardToken, Pausable {
+
+  function transfer(address _to, uint256 _value) public whenNotPaused returns (bool) {
+    return super.transfer(_to, _value);
+  }
+
+  function transferFrom(address _from, address _to, uint256 _value) public whenNotPaused returns (bool) {
+    return super.transferFrom(_from, _to, _value);
+  }
+
+  function approve(address _spender, uint256 _value) public whenNotPaused returns (bool) {
+    return super.approve(_spender, _value);
+  }
+
+  function increaseApproval(address _spender, uint _addedValue) public whenNotPaused returns (bool success) {
+    return super.increaseApproval(_spender, _addedValue);
+  }
+
+  function decreaseApproval(address _spender, uint _subtractedValue) public whenNotPaused returns (bool success) {
+    return super.decreaseApproval(_spender, _subtractedValue);
+  }
+}
+
+/**
  * @title Mintable token
  * @dev Simple ERC20 Token example, with mintable token creation
  * @dev Issue: * https://github.com/OpenZeppelin/zeppelin-solidity/issues/120
@@ -267,46 +340,45 @@ contract MintableToken is StandardToken, Ownable {
  * @title CinderToken
  * @dev Mintable ERC20 Token.
  */
-contract CinderToken is MintableToken {
+contract CinderToken is MintableToken, PausableToken {
 
     string public constant name = "CinderToken";
     string public constant symbol = "CIN";
     uint8 public constant decimals = 18;
-  
   // bytes4 public constant entity = 0x0010B; // es6 => `&#${'0x0010B'.substr(1)}` // html => &#x0010B;
 
-    bool public premintingFinished = false;
+    // bool public premintingFinished = false;
 
-    uint256 public constant INITIAL_SUPPLY = 1 * (10 ** 8) * (10 ** uint256(decimals));
-    uint8 public constant SALE = 60; // Contributions from Sale
+    // uint8 public constant SALE = 60; // in % // Contributions from Sale
 
     // * @dev Throws if is unfinished or has already reopened minting
-    modifier canReopenMinting() {
-        assert(!premintingFinished);
-        assert(mintingFinished);
-        _;
-    }
+    // modifier canReopenMinting() {
+    //     assert(!premintingFinished);
+    //     assert(mintingFinished);
+    //     _;
+    // }
 
     /**
      * @dev Constructor that gives msg.sender all of existing tokens.
      */
     function CinderToken() {
-        uint256 supply = INITIAL_SUPPLY.mul(uint256(100).sub(uint256(SALE))).div(100);
-        totalSupply = supply;
-        balances[msg.sender] = supply;
+        // create and allocate percentage not to be sold so it can be redistributed later
+        // uint256 supply = INITIAL_SUPPLY.mul(uint256(100).sub(uint256(SALE))).div(100);
+        // totalSupply = supply;
+        // balances[msg.sender] = supply;
     }
 
     // reopenMinting can only be called once 
     // so that a follow-up ICO can preceed the "pre-ICO"
-    function reopenMinting(uint256 _additionalSupply) onlyOwner canReopenMinting public returns(bool) {
-        totalSupply = totalSupply.add(_additionalSupply);
-        balances[msg.sender] = balances[msg.sender].add(_additionalSupply);
+    // function reopenMinting(uint256 _additionalSupply) onlyOwner canReopenMinting public returns(bool) {
+    //     totalSupply = totalSupply.add(_additionalSupply);
+    //     balances[msg.sender] = balances[msg.sender].add(_additionalSupply);
         
-        premintingFinished = true;
-        // change status of super (MintableToken)
-        mintingFinished = false;
-        return true;
-    }
+    //     premintingFinished = true;
+    //     // change status of super (MintableToken)
+    //     mintingFinished = false;
+    //     return true;
+    // }
 }
 
 /**
@@ -442,64 +514,113 @@ contract CappedCrowdsale is Crowdsale {
 }
 
 
-contract CinderTokenSale is CappedCrowdsale, Ownable {
+contract SplitPhaseDistribution is CappedCrowdsale, Ownable {
 
-  CinderToken public token;
-  uint8 public constant INITIAL_START_TIME = uint8(1506016712); // December 1, 2017 12:00:00
-  uint8 public constant INITIAL_END_TIME = uint8(1514696400); // December 31, 2017 00:00:00
-  // uint8 public constant START_TIME = 1514826000; // January 1, 2018 12:00:00
-  // uint8 public constant END_TIME = 1517374800; // January 31, 2018 00:00:00
+  // start and end timestamps where investments are allowed (both inclusive)
+  uint256 public secondaryStartTime;
+  uint256 public secondaryEndTime;
+  uint256 public secondaryCap;
+  uint256 public secondaryRate;
 
-  uint8 public constant INITIAL_RATE = uint8(1 * (10 ** 15)); // 1 CIN = .001 ETH
-  uint256 public constant INITIAL_CAP = 1 * (10 ** 8) * (10 ** 18);
-  
-                                   // 
   event TokenRateAdjustment(uint256 exchangeRate);
 
-
-  function CinderTokenSale (
-    address _wallet
-  )
-    Crowdsale(INITIAL_START_TIME, INITIAL_END_TIME, INITIAL_RATE, _wallet)
-    CappedCrowdsale(INITIAL_CAP)
+  function SplitPhaseDistribution(uint256 _startTime, uint256 _endTime, uint256 _secondaryStartTime, uint256 _secondaryEndTime, uint256 _rate, uint256 _secondaryRate, uint256 _cap, uint256 _secondaryCap, address _wallet)
+    CappedCrowdsale(_cap)
+    Crowdsale(_startTime, _endTime, _rate, _wallet)
   {
-    owner = msg.sender;
-  }
+    require(_startTime >= now);
+    require(_endTime >= _startTime);
+    // second cap should be larger than first
+    require(_secondaryCap > _cap);
+    // first phase should get a better rate
+    require(_secondaryRate < _rate);
 
+    owner = tx.origin;
+    secondaryStartTime = _secondaryStartTime;
+    secondaryEndTime = _secondaryEndTime;
+    secondaryCap = _secondaryCap;
+    secondaryRate = _secondaryRate;
+  }
 
   // overriding Crowdsale#createTokenContract to add cap logic
   // @return MintableToken as CinderToken
   function createTokenContract() internal returns (MintableToken) {
     // put the tokens in the owners account until they are granted
-    // 
+    // to interact with this token directly, call `CinderTokenSale.token()`
+    // and use `CinderToken` ABI
     return new CinderToken();
   }
 
   function adjustRate(uint256 _rate) onlyOwner public returns (bool) {
-    require(_rate > 0 || _rate != rate);
+    require(_rate > 0);
 
-    rate = _rate;
-    TokenRateAdjustment(rate);
+    if (now < endTime) {
+      rate = _rate;
+    } else {
+      secondaryRate = _rate;
+    }
+    TokenRateAdjustment(_rate);
     return true;
   }
 
-  function changeWallet(address _wallet) onlyOwner public returns (bool) {
-    // require(_wallet != 0x0);
+  // function changeWallet(address _wallet) onlyOwner public returns (bool) {
+  //   require(_wallet != 0x0);
 
-    wallet = _wallet;
-    return true;
+  //   wallet = _wallet;
+  //   return true;
+  // }
+
+
+  function _isActive() internal constant returns (bool) {
+    if (now >= startTime && now < endTime) {
+      if (weiRaised < cap) {
+        return true;
+      }
+    }
+    if (now >= secondaryStartTime && now < secondaryEndTime) {
+      if (weiRaised < secondaryCap) {
+        return true;
+      }
+    }
+    return false;
   }
 
-  function reopenSale(uint256 _additionalSupply, uint256 _startTime, uint256 _endTime) onlyOwner public returns (bool) {
-    require(_startTime >= now);
-    require(_endTime >= _startTime);
-    // require(_additionalSupply > cap);
+  function isActive() public constant returns (bool) {
+    return _isActive();
+  }
 
-    // assume none can be sold between sales
-    cap = cap.add(_additionalSupply);
-    startTime = _startTime;
-    endTime = _endTime;
-    token.reopenMinting(_additionalSupply, _startTime, _endTime);
-    return true;
+  // overriding Crowdsale#validPurchase to add extra cap logic
+  // @return true if investors can buy at the moment
+  function validPurchase() internal constant returns (bool) {
+    bool valid = _isActive();
+    return (valid && msg.value != 0);
+  }
+
+  // overriding Crowdsale#hasEnded to add cap logic
+  // @return true if primary OR secondary event has ended
+  function hasEnded() public constant returns (bool) {
+    bool active = true;
+    bool capReached = false;
+    if (now < secondaryStartTime && now > endTime) {
+      active = false;
+      capReached = weiRaised >= cap;
+    }
+    if (now > secondaryStartTime && now > secondaryEndTime) {
+      active = false;
+      capReached = weiRaised >= secondaryCap;
+    }
+    return (!active || capReached);
+  }
+
+}
+
+contract CinderTokenDistribution {
+  using SafeMath for uint256;
+
+  SplitPhaseDistribution public tokenDistribution;
+
+  function CinderTokenSale() {
+    tokenDistribution = new SplitPhaseDistribution(now.add(30 days), now.add(60 days), now.add(90 days), now.add(120 days), uint256(100), uint256(50), uint256(10 ** 4), uint256(10 ** 6), tx.origin);
   }
 }
+

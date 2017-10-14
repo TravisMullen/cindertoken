@@ -7,11 +7,11 @@
 //   deployer.deploy(CinderTokenSale);
 // };
 
-var CinderToken = artifacts.require("./CinderToken.sol");
-var CinderTokenSale = artifacts.require("./CinderTokenSale.sol");
+// const CinderToken = artifacts.require("./CinderToken.sol");
+const CinderTokenDistribution = artifacts.require("../contracts/CinderTokenDistribution");
 
 module.exports = function(deployer) {
-  deployer.deploy(CinderToken);
-  deployer.link(CinderToken, CinderTokenSale);
-  deployer.deploy(CinderTokenSale);
+  // deployer.deploy(CinderToken);
+  // deployer.link(CinderToken, CinderTokenDistribution);
+  deployer.deploy(CinderTokenDistribution);
 };
