@@ -551,6 +551,31 @@ contract SplitPhaseDistribution is CappedCrowdsale, Ownable {
     return new CinderToken();
   }
 
+
+  // low level token purchase function
+  function buyTokens(address beneficiary) public payable {
+    require(beneficiary != 0x0);
+    require(validPurchase());
+
+    uint256 weiAmount = msg.value;
+
+    // calculate token amount to be created
+    uint256 tokens = 0;
+    if (now < endTime) {
+      tokens = weiAmount.mul(rate);
+    } else {
+      tokens = weiAmount.mul(secondaryRate);
+    }
+
+    // update state
+    weiRaised = weiRaised.add(weiAmount);
+
+    token.mint(beneficiary, tokens);
+    TokenPurchase(msg.sender, beneficiary, weiAmount, tokens);
+
+    forwardFunds();
+  }
+
   function adjustRate(uint256 _rate) onlyOwner public returns (bool) {
     require(_rate > 0);
 
@@ -570,19 +595,14 @@ contract SplitPhaseDistribution is CappedCrowdsale, Ownable {
   //   return true;
   // }
 
-
   function _isActive() internal constant returns (bool) {
-    if (now >= startTime && now < endTime) {
-      if (weiRaised < cap) {
-        return true;
-      }
+    if (now >= startTime && now < endTime && weiRaised < cap) {
+      return true;
+    } else if (now >= secondaryStartTime && now < secondaryEndTime && weiRaised < secondaryCap) {
+      return true;
+    } else {
+      return false;
     }
-    if (now >= secondaryStartTime && now < secondaryEndTime) {
-      if (weiRaised < secondaryCap) {
-        return true;
-      }
-    }
-    return false;
   }
 
   function isActive() public constant returns (bool) {
@@ -592,24 +612,23 @@ contract SplitPhaseDistribution is CappedCrowdsale, Ownable {
   // overriding Crowdsale#validPurchase to add extra cap logic
   // @return true if investors can buy at the moment
   function validPurchase() internal constant returns (bool) {
-    bool valid = _isActive();
-    return (valid && msg.value != 0);
+    return (_isActive() && msg.value != 0);
   }
 
-  // overriding Crowdsale#hasEnded to add cap logic
-  // @return true if primary OR secondary event has ended
+  // overriding Crowdsale#hasEnded to add cap logic and split phase
+  // @return true if is after primary start, not within a active distribution phase
   function hasEnded() public constant returns (bool) {
-    bool active = true;
-    bool capReached = false;
-    if (now < secondaryStartTime && now > endTime) {
-      active = false;
-      capReached = weiRaised >= cap;
+    if (now < startTime) {
+      return false;
     }
-    if (now > secondaryStartTime && now > secondaryEndTime) {
-      active = false;
-      capReached = weiRaised >= secondaryCap;
+    if (now >= endTime && now < secondaryStartTime) {
+      return true;
     }
-    return (!active || capReached);
+    if (_isActive()) {
+      return false;
+    } else {
+      return true;
+    }
   }
 
 }
@@ -620,7 +639,7 @@ contract CinderTokenDistribution {
   SplitPhaseDistribution public tokenDistribution;
 
   function CinderTokenSale() {
-    tokenDistribution = new SplitPhaseDistribution(now.add(30 days), now.add(60 days), now.add(90 days), now.add(120 days), uint256(100), uint256(50), uint256(10 ** 4), uint256(10 ** 6), tx.origin);
+    tokenDistribution = new SplitPhaseDistribution(now.add(30 days), now.add(60 days), now.add(90 days), now.add(120 days), uint256(100), uint256(50), uint256(10 ** 4), uint256(10 ** 8), tx.origin);
   }
 }
 

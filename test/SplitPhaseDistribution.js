@@ -73,8 +73,11 @@ contract('SplitPhaseDistribution for CinderToken', function ([owner, wallet, inv
 
   it('isActive should be false before start of the primary phase', async function () {
     (await this.crowdsale.isActive()).should.equal(false);
+  });
+  it('hasEnded should be false before start of the primary phase', async function () {
     (await this.crowdsale.hasEnded()).should.equal(false);
   });
+
 
   it('should accept payments during the primary phase', async function () {
     const investmentAmount = ether(1);
@@ -89,14 +92,17 @@ contract('SplitPhaseDistribution for CinderToken', function ([owner, wallet, inv
   it('isActive should be true after start of the primary phase', async function () {
     await increaseTimeTo(this.startTime);
     (await this.crowdsale.isActive()).should.equal(true);
+  });
+  it('hasEnded should be true after start of the primary phase', async function () {
+    await increaseTimeTo(this.startTime);
     (await this.crowdsale.hasEnded()).should.equal(false);
   });
+
 
   it('isActive should be false if over cap', async function () {
     await increaseTimeTo(this.startTime);
     await this.crowdsale.send(CAP);
     (await this.crowdsale.isActive()).should.equal(false);
-    (await this.crowdsale.hasEnded()).should.equal(true);
   });
 
   it('hasEnded should be true', async function () {
@@ -129,11 +135,11 @@ contract('SplitPhaseDistribution for CinderToken', function ([owner, wallet, inv
 
   // the secondary phase
   // 
-  it('isActive should be false during the secondary phase', async function () {
+  it('isActive should be true during the secondary phase', async function () {
     await increaseTimeTo(this.secondaryStartTime);
     (await this.crowdsale.isActive()).should.equal(true);
   });
-  it('hasEnded should be trye during the secondary phase', async function () {
+  it('hasEnded should be false during the secondary phase', async function () {
     await increaseTimeTo(this.secondaryStartTime);
     (await this.crowdsale.hasEnded()).should.equal(false);
   });
@@ -160,6 +166,14 @@ contract('SplitPhaseDistribution for CinderToken', function ([owner, wallet, inv
     await this.crowdsale.send(1).should.be.rejectedWith(EVMThrow);
   });
 
+  it('isActive should be false after end the secondary phase', async function () {
+    await increaseTimeTo(this.afterSecondaryEndTime);
+    (await this.crowdsale.isActive()).should.equal(true);
+  });
+  it('hasEnded should be true after end the secondary phase', async function () {
+    await increaseTimeTo(this.afterSecondaryEndTime);
+    (await this.crowdsale.hasEnded()).should.equal(false);
+  });
   // should allocate percetange of tokens
   // 
   // // should be able to change rate for each
