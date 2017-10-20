@@ -616,18 +616,14 @@ contract SplitPhaseDistribution is CappedCrowdsale, Ownable {
   }
 
   // overriding Crowdsale#hasEnded to add cap logic and split phase
-  // @return true if is after primary start, not within a active distribution phase
+  // @return true if both primary and secondary have been completed by time and/or cap reached
   function hasEnded() public constant returns (bool) {
-    if (now < startTime) {
-      return false;
-    }
-    if (now >= endTime && now < secondaryStartTime) {
+    bool afterEnd = now >= secondaryEndTime;
+    bool overCap = now >= secondaryStartTime && weiRaised >= secondaryCap;
+    if (afterEnd || overCap) {
       return true;
-    }
-    if (_isActive()) {
-      return false;
     } else {
-      return true;
+      return false;
     }
   }
 

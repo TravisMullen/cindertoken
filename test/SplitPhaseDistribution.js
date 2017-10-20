@@ -93,7 +93,7 @@ contract('SplitPhaseDistribution for CinderToken', function ([owner, wallet, inv
     await increaseTimeTo(this.startTime);
     (await this.crowdsale.isActive()).should.equal(true);
   });
-  it('hasEnded should be true after start of the primary phase', async function () {
+  it('hasEnded should be false after start of the primary phase', async function () {
     await increaseTimeTo(this.startTime);
     (await this.crowdsale.hasEnded()).should.equal(false);
   });
@@ -105,10 +105,10 @@ contract('SplitPhaseDistribution for CinderToken', function ([owner, wallet, inv
     (await this.crowdsale.isActive()).should.equal(false);
   });
 
-  it('hasEnded should be true', async function () {
+  it('hasEnded should be false', async function () {
     await increaseTimeTo(this.startTime);
     await this.crowdsale.send(CAP);
-    (await this.crowdsale.hasEnded()).should.equal(true);
+    (await this.crowdsale.hasEnded()).should.equal(false);
   });
 
   it('should reject payments over cap', async function () {
@@ -121,9 +121,9 @@ contract('SplitPhaseDistribution for CinderToken', function ([owner, wallet, inv
     await increaseTimeTo(this.afterEnd);
     (await this.crowdsale.isActive()).should.equal(false);
   });
-  it('hasEnded should be true if between primary and secondary phases', async function () {
+  it('hasEnded should be false if between primary and secondary phases', async function () {
     await increaseTimeTo(this.afterEnd);
-    (await this.crowdsale.hasEnded()).should.equal(true);
+    (await this.crowdsale.hasEnded()).should.equal(false);
   });
 
   // the primary and secondary intermediary
@@ -168,40 +168,17 @@ contract('SplitPhaseDistribution for CinderToken', function ([owner, wallet, inv
 
   it('isActive should be false after end the secondary phase', async function () {
     await increaseTimeTo(this.afterSecondaryEndTime);
-    (await this.crowdsale.isActive()).should.equal(true);
+    (await this.crowdsale.isActive()).should.equal(false);
   });
   it('hasEnded should be true after end the secondary phase', async function () {
     await increaseTimeTo(this.afterSecondaryEndTime);
-    (await this.crowdsale.hasEnded()).should.equal(false);
+    (await this.crowdsale.hasEnded()).should.equal(true);
   });
+
   // should allocate percetange of tokens
   // 
   // // should be able to change rate for each
-
-  // it('should allow finalization and transfer funds to wallet if the goal is reached', async function () {
-  //   await increaseTimeTo(this.startTime);
-  //   await this.crowdsale.send(GOAL);
-
-  //   const beforeFinalization = web3.eth.getBalance(wallet);
-  //   await increaseTimeTo(this.afterEndTime);
-  //   await this.crowdsale.finalize({from: owner});
-  //   const afterFinalization = web3.eth.getBalance(wallet);
-
-  //   afterFinalization.minus(beforeFinalization).should.be.bignumber.equal(GOAL);
-  // });
-
-  // it('should allow refunds if the goal is not reached', async function () {
-  //   const balanceBeforeInvestment = web3.eth.getBalance(investor);
-
-  //   await increaseTimeTo(this.startTime);
-  //   await this.crowdsale.sendTransaction({value: ether(1), from: investor, gasPrice: 0});
-  //   await increaseTimeTo(this.afterEndTime);
-
-  //   await this.crowdsale.finalize({from: owner});
-  //   await this.crowdsale.claimRefund({from: investor, gasPrice: 0}).should.be.fulfilled;
-
-  //   const balanceAfterRefund = web3.eth.getBalance(investor);
-  //   balanceBeforeInvestment.should.be.bignumber.equal(balanceAfterRefund);
-  // });
+  // 
+  // should only be able to transfer/trade after 'hasEnded'
 
 });
