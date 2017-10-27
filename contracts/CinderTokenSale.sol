@@ -264,35 +264,6 @@ contract StandardToken is ERC20, BasicToken {
 }
 
 /**
- * @title Pausable token
- *
- * @dev StandardToken modified with pausable transfers.
- **/
-
-contract PausableToken is StandardToken, Pausable {
-
-  function transfer(address _to, uint256 _value) public whenNotPaused returns (bool) {
-    return super.transfer(_to, _value);
-  }
-
-  function transferFrom(address _from, address _to, uint256 _value) public whenNotPaused returns (bool) {
-    return super.transferFrom(_from, _to, _value);
-  }
-
-  function approve(address _spender, uint256 _value) public whenNotPaused returns (bool) {
-    return super.approve(_spender, _value);
-  }
-
-  function increaseApproval(address _spender, uint _addedValue) public whenNotPaused returns (bool success) {
-    return super.increaseApproval(_spender, _addedValue);
-  }
-
-  function decreaseApproval(address _spender, uint _subtractedValue) public whenNotPaused returns (bool success) {
-    return super.decreaseApproval(_spender, _subtractedValue);
-  }
-}
-
-/**
  * @title Mintable token
  * @dev Simple ERC20 Token example, with mintable token creation
  * @dev Issue: * https://github.com/OpenZeppelin/zeppelin-solidity/issues/120
@@ -340,45 +311,18 @@ contract MintableToken is StandardToken, Ownable {
  * @title CinderToken
  * @dev Mintable ERC20 Token.
  */
-contract CinderToken is MintableToken, PausableToken {
+contract CinderToken is MintableToken {
 
     string public constant name = "CinderToken";
     string public constant symbol = "CIN";
     uint8 public constant decimals = 18;
-  // bytes4 public constant entity = 0x0010B; // es6 => `&#${'0x0010B'.substr(1)}` // html => &#x0010B;
-
-    // bool public premintingFinished = false;
-
-    // uint8 public constant SALE = 60; // in % // Contributions from Sale
-
-    // * @dev Throws if is unfinished or has already reopened minting
-    // modifier canReopenMinting() {
-    //     assert(!premintingFinished);
-    //     assert(mintingFinished);
-    //     _;
-    // }
+    bytes4 public constant entity = 0x0010B; // es6 => `&#${'0x0010B'.substr(1)}` // html => &#x0010B;
 
     /**
      * @dev Constructor that gives msg.sender all of existing tokens.
      */
     function CinderToken() {
-        // create and allocate percentage not to be sold so it can be redistributed later
-        // uint256 supply = INITIAL_SUPPLY.mul(uint256(100).sub(uint256(SALE))).div(100);
-        // totalSupply = supply;
-        // balances[msg.sender] = supply;
     }
-
-    // reopenMinting can only be called once 
-    // so that a follow-up ICO can preceed the "pre-ICO"
-    // function reopenMinting(uint256 _additionalSupply) onlyOwner canReopenMinting public returns(bool) {
-    //     totalSupply = totalSupply.add(_additionalSupply);
-    //     balances[msg.sender] = balances[msg.sender].add(_additionalSupply);
-        
-    //     premintingFinished = true;
-    //     // change status of super (MintableToken)
-    //     mintingFinished = false;
-    //     return true;
-    // }
 }
 
 /**
@@ -484,6 +428,41 @@ contract Crowdsale {
 }
 
 /**
+ * @title FinalizableCrowdsale
+ * @dev Extension of Crowdsale where an owner can do extra work
+ * after finishing.
+ */
+contract FinalizableCrowdsale is Crowdsale, Ownable {
+  using SafeMath for uint256;
+
+  bool public isFinalized = false;
+
+  event Finalized();
+
+  /**
+   * @dev Must be called after crowdsale ends, to do some extra finalization
+   * work. Calls the contract's finalization function.
+   */
+  function finalize() onlyOwner public {
+    require(!isFinalized);
+    require(hasEnded());
+
+    finalization();
+    Finalized();
+
+    isFinalized = true;
+  }
+
+  /**
+   * @dev Can be overridden to add finalization logic. The overriding function
+   * should call super.finalization() to ensure the chain of finalization is
+   * executed entirely.
+   */
+  function finalization() internal {
+  }
+}
+
+/**
  * @title CappedCrowdsale
  * @dev Extension of Crowdsale with a max amount of funds raised
  */
@@ -514,7 +493,7 @@ contract CappedCrowdsale is Crowdsale {
 }
 
 
-contract SplitPhaseDistribution is CappedCrowdsale, Ownable {
+contract SplitPhaseDistribution is CappedCrowdsale, FinalizableCrowdsale {
 
   // start and end timestamps where investments are allowed (both inclusive)
   uint256 public secondaryStartTime;
