@@ -2,12 +2,11 @@
 
 ### Symbol: CIN
 ### Decimals: 18
-### Supply: 1,000,000
-### Sale Start: 1514826000 / January 1, 2018 12:00:00
-### Sale Stop: 1517374800 / January 31, 2018 00:00:00
-### Entity: ċ
+### Supply: 1,000,000 CIN
+### Cap: 10,000 ETH
 ### Exchange Rate: 1 CIN = .001 ETH
-### Cap: 10,000
+
+### Entity: ċ
 
 ### Phase 1 Start: 1514764800
 ```js
@@ -17,8 +16,7 @@ Mon, 01 Jan 2018 00:00:00 +0000 in RFC 822, 1036, 1123, 2822
 Monday, 01-Jan-18 00:00:00 UTC in RFC 2822
 2018-01-01T00:00:00+00:00 in RFC 3339
 ```
-### Phase 2 Stop:
-##1517443200
+### Phase 2 Stop: 1517443200
 ```js
 02/01/2018 @ 12:00am (UTC)
 2018-02-01T00:00:00+00:00 in ISO 8601
@@ -41,4 +39,5 @@ Thursday, 01-Mar-18 00:00:00 UTC in RFC 2822
 2018-04-01T00:00:00+00:00 in ISO 8601
 Sun, 01 Apr 2018 00:00:00 +0000 in RFC 822, 1036, 1123, 2822
 Sunday, 01-Apr-18 00:00:00 UTC in RFC 2822
-2018-04-01T00:00:00+00:00 in RFC 3339```
+2018-04-01T00:00:00+00:00 in RFC 3339
+```
