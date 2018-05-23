@@ -264,6 +264,50 @@ contract StandardToken is ERC20, BasicToken {
 }
 
 /**
+ * @title Pausable
+ * @dev Base contract which allows children to implement an emergency stop mechanism.
+ */
+contract DynamicallyPausable is Ownable {
+  event Pause();
+  event Unpause();
+
+  bool public paused = false;
+
+
+  /**
+   * @dev Modifier to make a function callable only when the contract is not paused.
+   */
+  modifier whenNotPaused() {
+    require(!paused);
+    _;
+  }
+
+  /**
+   * @dev Modifier to make a function callable only when the contract is paused.
+   */
+  modifier whenPaused() {
+    require(paused);
+    _;
+  }
+
+  /**
+   * @dev called by the owner to pause, triggers stopped state
+   */
+  function pause() onlyOwner whenNotPaused public {
+    paused = true;
+    Pause();
+  }
+
+  /**
+   * @dev called by the owner to unpause, returns to normal state
+   */
+  function unpause() onlyOwner whenPaused public {
+    paused = false;
+    Unpause();
+  }
+}
+
+/**
  * @title Mintable token
  * @dev Simple ERC20 Token example, with mintable token creation
  * @dev Issue: * https://github.com/OpenZeppelin/zeppelin-solidity/issues/120
@@ -428,41 +472,6 @@ contract Crowdsale {
 }
 
 /**
- * @title FinalizableCrowdsale
- * @dev Extension of Crowdsale where an owner can do extra work
- * after finishing.
- */
-contract FinalizableCrowdsale is Crowdsale, Ownable {
-  using SafeMath for uint256;
-
-  bool public isFinalized = false;
-
-  event Finalized();
-
-  /**
-   * @dev Must be called after crowdsale ends, to do some extra finalization
-   * work. Calls the contract's finalization function.
-   */
-  function finalize() onlyOwner public {
-    require(!isFinalized);
-    require(hasEnded());
-
-    finalization();
-    Finalized();
-
-    isFinalized = true;
-  }
-
-  /**
-   * @dev Can be overridden to add finalization logic. The overriding function
-   * should call super.finalization() to ensure the chain of finalization is
-   * executed entirely.
-   */
-  function finalization() internal {
-  }
-}
-
-/**
  * @title CappedCrowdsale
  * @dev Extension of Crowdsale with a max amount of funds raised
  */
@@ -493,7 +502,7 @@ contract CappedCrowdsale is Crowdsale {
 }
 
 
-contract SplitPhaseDistribution is CappedCrowdsale, FinalizableCrowdsale {
+contract SplitPhaseDistribution is CappedCrowdsale, FinalizableCrowdsale, Ownable {
 
   // start and end timestamps where investments are allowed (both inclusive)
   uint256 public secondaryStartTime;
